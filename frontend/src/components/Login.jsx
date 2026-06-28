@@ -15,7 +15,7 @@ function Login({ setToken }) {
     setError('');
     setSuccess('');
 
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const apiUrl = '';
     
     try {
       if (isLogin) {

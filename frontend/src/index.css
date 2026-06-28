@@ -17,6 +17,35 @@
   --radius: 12px;
 }
 
+body.dark {
+  --background: #0F172A;
+  --surface: #1E293B;
+  --surface-alt: #334155;
+  --text: #F8FAFC;
+  --text-muted: #94A3B8;
+  --border: #334155;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+}
+
+body.dark .navbar {
+  background: rgba(30, 41, 59, 0.8);
+}
+
+body.dark .auth-card {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: var(--border);
+}
+
+body.dark .footer {
+  background: var(--surface);
+}
+
+body.dark .hero-shape {
+  background: radial-gradient(circle, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 70%);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -116,6 +145,16 @@ a:hover {
   border-color: var(--primary);
   background: var(--surface);
   box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+}
+
+.navbar-search svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+  z-index: 10;
 }
 
 .navbar-actions {

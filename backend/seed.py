@@ -11,53 +11,59 @@ async def seed_events():
             "title": "Neon Nights Synthwave Concert",
             "description": "Experience the ultimate retro-futuristic music festival with top synthwave artists, neon installations, and an unforgettable cyberpunk atmosphere.",
             "location": "Downtown Arena, Main Stage",
-            "date": datetime.utcnow() + timedelta(days=2),
+            "date": datetime.utcnow() + timedelta(days=2, hours=4, minutes=15),
             "organizer_id": 1
         },
         {
             "title": "Tech Innovators Summit 2026",
             "description": "Join industry leaders to discuss AI, Web3, and the future of cloud computing. Includes keynote speeches, networking sessions, and catered lunch.",
             "location": "Grand Convention Center",
-            "date": datetime.utcnow() + timedelta(days=5),
+            "date": datetime.utcnow() + timedelta(days=5, hours=1, minutes=30),
             "organizer_id": 1
         },
         {
             "title": "Urban Marathon & Food Festival",
             "description": "Run for a cause! A 10k marathon followed by a huge food truck festival featuring the best local chefs and street food vendors.",
             "location": "City Park Plaza",
-            "date": datetime.utcnow() + timedelta(days=7),
+            "date": datetime.utcnow() + timedelta(days=7, hours=-2, minutes=45),
             "organizer_id": 1
         },
         {
             "title": "React.js Advanced Workshop",
             "description": "A deep dive into advanced React patterns, performance optimization, and server components. Bring your laptop for hands-on coding.",
             "location": "TechHub Co-working Space",
-            "date": datetime.utcnow() + timedelta(days=1),
+            "date": datetime.utcnow() + timedelta(days=1, hours=3, minutes=0),
             "organizer_id": 1
         },
         {
             "title": "Midnight Comedy Special",
             "description": "Get ready for a night of non-stop laughs featuring touring comedians from Comedy Central and Netflix specials.",
             "location": "The Laughing Lounge",
-            "date": datetime.utcnow() + timedelta(hours=48),
+            "date": datetime.utcnow() + timedelta(hours=48, minutes=50),
             "organizer_id": 1
         },
         {
             "title": "Sunset Rooftop Yoga",
             "description": "Relax and unwind with a guided Vinyasa flow class on the highest rooftop in the city. Watch the sunset while finding your zen.",
             "location": "Skyline Hotel Rooftop",
-            "date": datetime.utcnow() + timedelta(days=3),
+            "date": datetime.utcnow() + timedelta(days=3, hours=5, minutes=10),
             "organizer_id": 1
         }
     ]
 
+    from sqlalchemy import text
     async with AsyncSession(engine) as session:
+        # Clear old RSVPs and events
+        await session.execute(text("DELETE FROM rsvp"))
+        await session.execute(text("DELETE FROM event"))
+        await session.commit()
+        
+        # Insert new events
         for data in events_data:
             event = Event(**data)
             session.add(event)
-        
         await session.commit()
-        print("Database seeded with fake events successfully!")
+        print("Database seeded with 6 dummy events!")
 
 if __name__ == "__main__":
     asyncio.run(seed_events())

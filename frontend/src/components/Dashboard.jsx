@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-function Dashboard({ token, setToken }) {
+function Dashboard({ token, setToken, searchQuery }) {
   const [events, setEvents] = useState([]);
   const [message, setMessage] = useState('');
   
@@ -10,9 +10,12 @@ function Dashboard({ token, setToken }) {
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
   const [location, setLocation] = useState('');
-  const [price, setPrice] = useState(0); // Added mock price for UI
 
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  // Filter State
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [priceFilter, setPriceFilter] = useState('Any');
+
+  const apiUrl = '';
 
   useEffect(() => {
     fetchEvents();
@@ -25,7 +28,12 @@ function Dashboard({ token, setToken }) {
       });
       if (res.ok) {
         const data = await res.json();
-        setEvents(data);
+        // Add mock price for UI filtering
+        const eventsWithPrice = data.map((ev, i) => ({
+           ...ev,
+           isFree: i % 2 !== 0
+        }));
+        setEvents(eventsWithPrice);
       }
     } catch (err) {
       console.error("Failed to fetch events", err);
@@ -55,7 +63,7 @@ function Dashboard({ token, setToken }) {
     }
   };
 
-  const handleRSVP = async (eventId) => {
+  const handleBookTicket = async (eventId) => {
     try {
       const res = await fetch(`${apiUrl}/api/v1/events/${eventId}/rsvp`, {
         method: 'POST',
@@ -64,10 +72,10 @@ function Dashboard({ token, setToken }) {
       const data = await res.json();
       
       if (res.ok) {
-        setMessage('RSVP Successful! Check Celery logs for background tasks.');
+        setMessage('Book Ticket Successful! Check Celery logs for background tasks.');
         setTimeout(() => setMessage(''), 5000);
       } else {
-        setMessage(data.detail || 'RSVP failed');
+        setMessage(data.detail || 'Book Ticket failed');
       }
     } catch (err) {
       console.error(err);
@@ -76,13 +84,42 @@ function Dashboard({ token, setToken }) {
 
   const getRandomImage = (id) => `https://picsum.photos/seed/${id}/600/400`;
 
+  // Filtering Logic
+  const filteredEvents = events.filter(ev => {
+    // Search Query
+    const searchLower = (searchQuery || '').toLowerCase();
+    const matchesSearch = ev.title.toLowerCase().includes(searchLower) || 
+                          ev.description.toLowerCase().includes(searchLower) ||
+                          ev.location.toLowerCase().includes(searchLower);
+    
+    // Category Filter (Mock logic based on title)
+    let matchesCategory = true;
+    if (categoryFilter === 'Music') {
+      matchesCategory = ev.title.toLowerCase().includes('concert') || ev.title.toLowerCase().includes('music') || ev.title.toLowerCase().includes('synthwave');
+    } else if (categoryFilter === 'Tech') {
+      matchesCategory = ev.title.toLowerCase().includes('tech') || ev.title.toLowerCase().includes('react');
+    } else if (categoryFilter === 'Sports') {
+      matchesCategory = ev.title.toLowerCase().includes('marathon') || ev.title.toLowerCase().includes('yoga');
+    }
+
+    // Price Filter
+    let matchesPrice = true;
+    if (priceFilter === 'Free') {
+      matchesPrice = ev.isFree;
+    } else if (priceFilter === 'Paid') {
+      matchesPrice = !ev.isFree;
+    }
+
+    return matchesSearch && matchesCategory && matchesPrice;
+  });
+
   return (
     <>
       <div className="hero">
         <div className="hero-shape"></div>
         <div className="hero-content">
           <h1>Discover Amazing Local Events</h1>
-          <p>Book tickets, RSVP to exclusive gatherings, and connect with your community. Experience the best moments.</p>
+          <p>Book tickets, attend exclusive gatherings, and connect with your community. Experience the best moments.</p>
           <div style={{ display: 'flex', gap: '16px' }}>
             <button className="btn btn-white" onClick={() => window.scrollTo(0, 500)}>Explore Events</button>
             <button className="btn btn-outline" style={{ color: 'white', borderColor: 'white' }} onClick={() => setShowCreate(!showCreate)}>Host an Event</button>
@@ -126,38 +163,51 @@ function Dashboard({ token, setToken }) {
           <div className="sidebar-widget">
             <h3>Categories</h3>
             <div className="filter-group">
-              <label className="filter-label"><input type="checkbox" defaultChecked /> All Events</label>
-              <label className="filter-label"><input type="checkbox" /> Music & Concerts</label>
-              <label className="filter-label"><input type="checkbox" /> Tech Workshops</label>
-              <label className="filter-label"><input type="checkbox" /> Sports & Fitness</label>
+              <label className="filter-label">
+                <input type="radio" name="cat" checked={categoryFilter === 'All'} onChange={() => setCategoryFilter('All')} /> All Events
+              </label>
+              <label className="filter-label">
+                <input type="radio" name="cat" checked={categoryFilter === 'Music'} onChange={() => setCategoryFilter('Music')} /> Music & Concerts
+              </label>
+              <label className="filter-label">
+                <input type="radio" name="cat" checked={categoryFilter === 'Tech'} onChange={() => setCategoryFilter('Tech')} /> Tech Workshops
+              </label>
+              <label className="filter-label">
+                <input type="radio" name="cat" checked={categoryFilter === 'Sports'} onChange={() => setCategoryFilter('Sports')} /> Sports & Fitness
+              </label>
             </div>
           </div>
           
           <div className="sidebar-widget">
             <h3>Price Range</h3>
             <div className="filter-group">
-              <label className="filter-label"><input type="checkbox" defaultChecked /> Any Price</label>
-              <label className="filter-label"><input type="checkbox" /> Free (RSVP)</label>
-              <label className="filter-label"><input type="checkbox" /> Under $50</label>
+              <label className="filter-label">
+                <input type="radio" name="price" checked={priceFilter === 'Any'} onChange={() => setPriceFilter('Any')} /> Any Price
+              </label>
+              <label className="filter-label">
+                <input type="radio" name="price" checked={priceFilter === 'Free'} onChange={() => setPriceFilter('Free')} /> Free (Book Ticket)
+              </label>
+              <label className="filter-label">
+                <input type="radio" name="price" checked={priceFilter === 'Paid'} onChange={() => setPriceFilter('Paid')} /> Under $50
+              </label>
             </div>
           </div>
         </aside>
 
         <section className="event-grid">
-          {events.length === 0 ? (
+          {filteredEvents.length === 0 ? (
             <div style={{ padding: '40px', textAlign: 'center', gridColumn: '1 / -1' }}>
-              <h3 style={{ color: 'var(--text-muted)' }}>No events found. Be the first to host one!</h3>
+              <h3 style={{ color: 'var(--text-muted)' }}>No events match your criteria.</h3>
             </div>
           ) : (
-            events.map((event, idx) => {
+            filteredEvents.map((event) => {
               const d = new Date(event.date);
-              const isFree = idx % 2 !== 0; // Mock price logic for UI variation
               
               return (
                 <div className="event-card" key={event.id}>
                   <div className="event-image">
                     <img src={getRandomImage(event.id)} alt={event.title} />
-                    <div className="event-badge">{isFree ? 'FREE' : '$45.00'}</div>
+                    <div className="event-badge">{event.isFree ? 'FREE' : '$45.00'}</div>
                   </div>
                   <div className="event-content">
                     <div className="event-date">
@@ -167,7 +217,7 @@ function Dashboard({ token, setToken }) {
                     <p className="event-desc">{event.description}</p>
                     <div className="event-footer">
                       <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>📍 {event.location}</div>
-                      <button className="btn btn-primary" onClick={() => handleRSVP(event.id)}>RSVP</button>
+                      <button className="btn btn-primary" onClick={() => handleBookTicket(event.id)}>Book Ticket</button>
                     </div>
                   </div>
                 </div>
@@ -187,25 +237,25 @@ function Dashboard({ token, setToken }) {
             <div className="footer-col">
               <h4>Explore</h4>
               <ul>
-                <li><a href="#">Featured Events</a></li>
-                <li><a href="#">Concerts</a></li>
-                <li><a href="#">Workshops</a></li>
+                <li><a href="#" onClick={e => e.preventDefault()}>Featured Events</a></li>
+                <li><a href="#" onClick={e => e.preventDefault()}>Concerts</a></li>
+                <li><a href="#" onClick={e => e.preventDefault()}>Workshops</a></li>
               </ul>
             </div>
             <div className="footer-col">
               <h4>Host</h4>
               <ul>
-                <li><a href="#">Create Event</a></li>
-                <li><a href="#">Pricing</a></li>
-                <li><a href="#">Resources</a></li>
+                <li><a href="#" onClick={e => e.preventDefault()}>Create Event</a></li>
+                <li><a href="#" onClick={e => e.preventDefault()}>Pricing</a></li>
+                <li><a href="#" onClick={e => e.preventDefault()}>Resources</a></li>
               </ul>
             </div>
             <div className="footer-col">
               <h4>Company</h4>
               <ul>
-                <li><a href="#">About Us</a></li>
-                <li><a href="#">Careers</a></li>
-                <li><a href="#">Contact</a></li>
+                <li><a href="#" onClick={e => e.preventDefault()}>About Us</a></li>
+                <li><a href="#" onClick={e => e.preventDefault()}>Careers</a></li>
+                <li><a href="#" onClick={e => e.preventDefault()}>Contact</a></li>
               </ul>
             </div>
           </div>
