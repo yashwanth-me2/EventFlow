@@ -28,15 +28,26 @@ function Dashboard({ token, setToken, searchQuery }) {
       });
       if (res.ok) {
         const data = await res.json();
-        // Add mock price for UI filtering
         const eventsWithPrice = data.map((ev, i) => ({
            ...ev,
            isFree: i % 2 !== 0
         }));
         setEvents(eventsWithPrice);
+      } else {
+        throw new Error("API not available");
       }
     } catch (err) {
-      console.error("Failed to fetch events", err);
+      console.warn("Backend unavailable, loading Demo Mode data...");
+      // Fallback Demo Data for instant static deployments!
+      const demoData = [
+        { id: 1, title: "Neon Nights Synthwave Concert", description: "Experience the ultimate retro-futuristic music festival.", location: "Downtown Arena", date: new Date(Date.now() + 86400000 * 2).toISOString(), isFree: false },
+        { id: 2, title: "Tech Innovators Summit 2026", description: "Join industry leaders to discuss AI and Web3.", location: "Grand Convention Center", date: new Date(Date.now() + 86400000 * 5).toISOString(), isFree: true },
+        { id: 3, title: "Urban Marathon & Food Festival", description: "A 10k marathon followed by a food truck festival.", location: "City Park Plaza", date: new Date(Date.now() + 86400000 * 7).toISOString(), isFree: false },
+        { id: 4, title: "React.js Advanced Workshop", description: "A deep dive into advanced React patterns.", location: "TechHub Co-working Space", date: new Date(Date.now() + 86400000 * 1).toISOString(), isFree: true },
+        { id: 5, title: "Midnight Comedy Special", description: "Get ready for a night of non-stop laughs.", location: "The Laughing Lounge", date: new Date(Date.now() + 86400000 * 3).toISOString(), isFree: false },
+        { id: 6, title: "Sunset Rooftop Yoga", description: "Relax and unwind with a guided Vinyasa flow.", location: "Skyline Hotel Rooftop", date: new Date(Date.now() + 86400000 * 4).toISOString(), isFree: true }
+      ];
+      setEvents(demoData);
     }
   };
 
@@ -69,16 +80,17 @@ function Dashboard({ token, setToken, searchQuery }) {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      const data = await res.json();
-      
       if (res.ok) {
         setMessage('Book Ticket Successful! Check Celery logs for background tasks.');
         setTimeout(() => setMessage(''), 5000);
       } else {
+        const data = await res.json();
         setMessage(data.detail || 'Book Ticket failed');
       }
     } catch (err) {
-      console.error(err);
+      // Demo Mode
+      setMessage('Demo Mode: Ticket successfully booked! (Simulated)');
+      setTimeout(() => setMessage(''), 5000);
     }
   };
 
