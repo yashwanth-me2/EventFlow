@@ -30,7 +30,7 @@ app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(events_router, prefix="/api/v1/events", tags=["events"])
 
 # Serve Frontend
-frontend_dist = os.path.join(os.path.dirname(__file__), "../../frontend_dist")
+frontend_dist = os.path.join(os.path.dirname(__file__), "../frontend_dist")
 
 # Only mount if the directory exists (it will during Docker build)
 if os.path.isdir(frontend_dist):
